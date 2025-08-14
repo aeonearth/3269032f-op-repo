@@ -1,5 +1,27 @@
 pipeline {
-      agent any
+
+    agent {
+        node {
+            label 'master'
+        }
+    }
+
+    tools { 
+        maven 'maven-3269032f' 
+    }
+
+    options {
+        buildDiscarder logRotator( 
+                    daysToKeepStr: '15', 
+                    numToKeepStr: '10'
+            )
+    }
+
+    environment {
+        APP_NAME = "limtianzhong"
+        APP_ENV  = "DEV"
+    }
+
       stages {
           stage('Op-3269032f-S1') {
           steps {
