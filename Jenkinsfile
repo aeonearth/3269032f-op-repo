@@ -19,23 +19,20 @@ pipeline {
                         IMAGE_NAME="qa-bkup-image"
                         CONTAINER_NAME="3269032f-qa-svr"
 
-                        echo "Checking if Docker image $IMAGE_NAME exists..."
-
                         if docker images -q $IMAGE_NAME > /dev/null 2>&1 && [ -n "$(docker images -q $IMAGE_NAME)" ]; then
-                            echo "Image $IMAGE_NAME exists. Removing it..."
+                            echo "Image exists. Removing it..."
                             docker rmi -f $IMAGE_NAME
                         else
-                            echo "Image $IMAGE_NAME does not exist. Proceeding to create a new one..."
+                            echo "Image does not exist. Proceeding to create a new one..."
                         fi
 
                         echo "Creating new image $IMAGE_NAME from container $CONTAINER_NAME..."
                         docker commit $CONTAINER_NAME $IMAGE_NAME
 
-                        echo "Image creation completed."
                     '''
                 }
 
-            echo 'Stage 1'
+            echo "Op-S1-3269032f: QA web server is backup and updated"
           }
           }
             
