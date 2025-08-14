@@ -6,17 +6,6 @@ pipeline {
         }
     }
 
-    tools { 
-        maven 'maven-3269032f' 
-    }
-
-    options {
-        buildDiscarder logRotator( 
-                    daysToKeepStr: '15', 
-                    numToKeepStr: '10'
-            )
-    }
-
     environment {
         APP_NAME = "limtianzhong"
         APP_ENV  = "DEV"
