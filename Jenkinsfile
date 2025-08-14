@@ -58,20 +58,96 @@ pipeline {
           }       
             
           stage('Op-3269032f-S3') {
-          steps {
-            echo 'Stage 3'
-          }
+            steps {
+                script {
+                    def userChoice = input(
+                        id: 'UserInput', message: 'Continue the pipeline?',
+                        parameters: [
+                            choice(
+                                choices: ['Proceed to Roll out to Prod server', 'Roll back QA server'],
+                                description: 'Select action to perform',
+                                name: 'ACTION'
+                            )
+                        ]
+                    )
+
+                    if (userChoice == 'Proceed to Roll out to Prod server') {
+                        echo "Op-3269032f-S3: Proceed to roll out to Prod server."
+                    } else {
+                        echo "Rolling back QA server..."
+
+                        sh '''
+                            CONTAINER_NAME="3269032f-qa-svr"
+
+                            echo "Checking if container $CONTAINER_NAME exists..."
+                            if [ "$(docker ps -a -q -f name=^/${CONTAINER_NAME}$)" ]; then
+                                echo "Stopping and removing existing container $CONTAINER_NAME..."
+                                docker rm -f $CONTAINER_NAME
+                            else
+                                echo "No existing container named $CONTAINER_NAME found."
+                            fi
+
+                            echo "Starting new container..."
+                            docker run -d -it \
+                                --network customnetwork \
+                                --privileged \
+                                -p 33200:80 \
+                                -h 3269032f-qa-svr.localdomain \
+                                --name 3269032f-qa-svr \
+                                --add-host=sddo-vm.localdomain:172.20.113.172 \
+                                --ip=192.168.100.110 \
+                                --mount source=3269032f-qa-svr-vol01,target=/mnt/3269032f-qa-svr-vol01 \
+                                3269032f-qa-baseimage /sbin/init
+                        '''
+
+                        // Terminate the pipeline after rollback
+                        error("Aborting: Rollback complete. No further steps will be executed.")
+                    }
+                }
           }   
                         
           stage('Op-3269032f-S4') {
           steps {
-            echo 'Stage 4'
+		script {
+                    sh '''
+                        IMAGE_NAME="prod-bkup-image"
+                        CONTAINER_NAME="3269032f-prod-svr"
+
+                        if docker images -q $IMAGE_NAME > /dev/null 2>&1 && [ -n "$(docker images -q $IMAGE_NAME)" ]; then
+                            echo "Image exists. Removing it..."
+                            docker rmi -f $IMAGE_NAME
+                        else
+                            echo "Image does not exist. Proceeding to create a new one..."
+                        fi
+
+                        echo "Creating new image $IMAGE_NAME from container $CONTAINER_NAME..."
+                        docker commit $CONTAINER_NAME $IMAGE_NAME
+
+                    '''
+                }
+
+            echo "Op-S4-3269032f: prod web server is backup and updated"
           }
           }   
                         
           stage('Op-3269032f-S5') {
           steps {
-            echo 'Stage 5'
+                script {
+                    sh '''
+                        curl -is http://localhost:33500 | head -n 1 > /tmp/prod-result-file
+                        cat /tmp/prod-result-file
+                    '''
+
+                    def result = sh(script: "cat /tmp/prod-result-file", returnStdout: true).trim()
+                    
+                    if (result != "HTTP/1.1 200 OK") {
+                        error("Test failed: Expected 'HTTP/1.1 200 OK', but got '${result}'")
+                    } else {
+                        echo "Test passed: Got expected response '${result}'"
+                    }
+                }
+
+            echo 'Op-3269032f-S5: Checking on whether Prod server is running after update'
           }
           }   
                         
@@ -83,7 +159,7 @@ pipeline {
                         
           stage('Op-3269032f-S7') {
           steps {
-            echo 'Stage 7'
+            echo 'Op-3269032f-S7: Prod web server is monitored and ready to serve.'
           }
           }   
       }
