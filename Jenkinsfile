@@ -61,7 +61,8 @@ pipeline {
             steps {
                 script {
                     def userChoice = input(
-                        id: 'UserInput', message: 'Continue the pipeline?',
+                        id: 'UserInput',
+                        message: 'Choose Deployment Option',
                         parameters: [
                             choice(
                                 choices: ['Proceed to Roll out to Prod server', 'Roll back QA server'],
@@ -104,7 +105,8 @@ pipeline {
                         error("Aborting: Rollback complete. No further steps will be executed.")
                     }
                 }
-          }   
+            }
+        }
                         
           stage('Op-3269032f-S4') {
           steps {
