@@ -38,7 +38,22 @@ pipeline {
             
           stage('Op-3269032f-S2') {
           steps {
-            echo 'Stage 2'
+                script {
+                    sh '''
+                        curl -is http://localhost:33200 | head -n 1 > /tmp/qa-result-file
+                        cat /tmp/qa-result-file
+                    '''
+
+                    def result = sh(script: "cat /tmp/qa-result-file", returnStdout: true).trim()
+                    
+                    if (result != "HTTP/1.1 200 OK") {
+                        error("Test failed: Expected 'HTTP/1.1 200 OK', but got '${result}'")
+                    } else {
+                        echo "Test passed: Got expected response '${result}'"
+                    }
+                }
+
+            echo 'Op-3269032f-S2: Checking on whether QA server is running after update'
           }
           }       
             
