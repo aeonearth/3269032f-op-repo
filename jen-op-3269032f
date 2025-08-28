@@ -29,7 +29,7 @@ pipeline {
                         echo "Creating new image $IMAGE_NAME from container $CONTAINER_NAME..."
                         docker commit $CONTAINER_NAME $IMAGE_NAME
 
-			docker run --rm -it -v $(pwd):/workspace -w /workspace puppet/bolt bolt script run 3269032f_script.sh --targets ${CONTAINER_NAME} -u dockeradm -p "docker!2" --no-host-key-check --run-as root
+			docker run --rm -i -v /var/lib/jenkins/workspace/3269032f-operate-pipeline:/workspace -w /workspace puppet/bolt bolt script run 3269032f_script.sh --targets ${CONTAINER_NAME} -u dockeradm -p "docker!2" --no-host-key-check --run-as root
                     '''
                 }
 
