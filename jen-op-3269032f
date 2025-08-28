@@ -29,6 +29,7 @@ pipeline {
                         echo "Creating new image $IMAGE_NAME from container $CONTAINER_NAME..."
                         docker commit $CONTAINER_NAME $IMAGE_NAME
 
+                        bolt script run 3269032f_script.sh --targets ${CONTAINER_NAME} -u dockeradm -p "docker!2" --no-host-key-check --run-as root
                     '''
                 }
 
@@ -100,7 +101,7 @@ pipeline {
                                 --mount source=3269032f-qa-svr-vol01,target=/mnt/3269032f-qa-svr-vol01 \
                                 qa-bkup-image /sbin/init
                         '''
-
+                            echo "Op-3269032f-S3: QA server fails after update and is rolled back"
                         // Terminate the pipeline after rollback
                         error("Aborting: Rollback complete. No further steps will be executed.")
                     }
