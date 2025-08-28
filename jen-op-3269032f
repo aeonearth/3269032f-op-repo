@@ -29,6 +29,7 @@ pipeline {
                         echo "Creating new image $IMAGE_NAME from container $CONTAINER_NAME..."
                         docker commit $CONTAINER_NAME $IMAGE_NAME
 
+			docker exec --privileged -it 3269032f-qa-svr /bin/bash
                         cd /operate/3269032f/
                         git clone https://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@github.com/aeonearth/3269032f-op-repo.git
 			bolt script run /operate/3269032f/3269032f_script.sh --targets 3269032f-qa-svr -u dockeradm -p docker!2 --no-host-key-check --run-as root
